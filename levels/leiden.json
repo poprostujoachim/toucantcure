@@ -1,0 +1,10 @@
+{
+  "city": "Leiden",
+  "country": "Netherlands",
+  "disease": "Measles",
+  "vaccine_coverage": 0.93,
+  "waves": [
+    {"enemy_count": 12, "spawn_rate": 1.5, "enemy_speed": 1.0},
+    {"enemy_count": 20, "spawn_rate": 1.2, "enemy_speed": 1.2}
+  ],
+}
