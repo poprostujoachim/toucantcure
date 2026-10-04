@@ -1,17 +1,17 @@
 """Player stats.
 
-Every stat is a base value plus bonuses. Shop items and level-ups only ever add
-bonuses (through PlayerStats.add), never touch the base, so the stat sheet can
-always show where a number came from.
+ - Every stat is a base value plus bonuses. 
+ - Shop items and level-ups only ever add
+ - Bonuses dont affect the base value
 
 The one rule: formulas live in this file and nowhere else. Everything outside
 reads `.value` (or one of the helpers below) and never does its own maths on a
 stat, otherwise the stat sheet stops telling the truth.
+
 """
 import random
 
-# Armor uses diminishing returns: 25 armor = 20% less damage, 100 = 50%,
-# 300 = 75%, and it can never reach 100%.
+
 ARMOR_SCALE = 100
 
 # Attacks can never fire faster than this, however much attack speed you stack.
@@ -41,24 +41,24 @@ class Stat:
 class PlayerStats:
     def __init__(self):
         self.max_hp = Stat(100, minimum=1)
-        self.move_speed = Stat(300, minimum=50)          # pixels per second
-        self.armor = Stat(0, minimum=0)                  # see damage_taken()
-        self.crit_rate = Stat(0.05, minimum=0, maximum=1)  # 0.05 = 5% chance
-        self.crit_damage = Stat(1.5, minimum=1)          # crits deal x1.5
-        self.luck = Stat(1.0, minimum=0)                 # 1.0 = normal luck
-        self.pickup_range = Stat(50, minimum=0)          # pixels
-        self.xp_gain = Stat(1.0, minimum=0)              # the Crown
-        self.projectile_speed = Stat(1.0, minimum=0.1)   # multiplier on a weapon's speed
-        self.attack_speed = Stat(1.0, minimum=0.1)       # 2.0 = attacks twice as often
-        self.damage = Stat(1.0, minimum=0)               # the Spinach
+        self.move_speed = Stat(300, minimum=50)
+        self.armor = Stat(0, minimum=0)
+        self.crit_rate = Stat(0.05, minimum=0, maximum=1)
+        self.crit_damage = Stat(1.5, minimum=1)
+        self.luck = Stat(1.0, minimum=0)
+        self.pickup_range = Stat(50, minimum=0)
+        self.xp_gain = Stat(1.0, minimum=0)
+        self.projectile_speed = Stat(1.0, minimum=0.1)
+        self.attack_speed = Stat(1.0, minimum=0.1)
+        self.damage = Stat(1.0, minimum=0)
 
-        # Current hp is not a stat: it goes up and down during a run.
+        # Current hp is not a stat
         self.hp = self.max_hp.value
 
     def add(self, name, flat=0, percent=0.0):
-        """Give a bonus to one stat. This is what the shop and level-ups call.
-
-        A typo'd stat name raises an error instead of silently doing nothing.
+        """
+        Give a bonus to one stat 
+        This is what the shop and level-ups call
         """
         stat = getattr(self, name, None)
         if not isinstance(stat, Stat):
@@ -66,18 +66,19 @@ class PlayerStats:
         old_max_hp = self.max_hp.value
         stat.flat += flat
         stat.percent += percent
-        # Raising max hp also heals by the same amount, like picking up a heart.
+
+        # Raising max hp also heals by the same amount like picking up a heart in hades 2
         if stat is self.max_hp:
             self.hp = min(self.max_hp.value, self.hp + self.max_hp.value - old_max_hp)
 
-    # --- formulas ---------------------------------------------------------
+    # FORMULAS
 
     def damage_taken(self, amount):
-        """How much of an incoming hit actually lands after armor."""
+        # how much after armor
         return amount * ARMOR_SCALE / (ARMOR_SCALE + self.armor.value)
 
     def roll_damage(self, weapon_damage, rng=random):
-        """Damage one hit deals. Returns (damage, was_it_a_crit)."""
+        """Damage one hit deals  returns (damage, was_it_a_crit) """
         damage = weapon_damage * self.damage.value
         is_crit = rng.random() < self.crit_rate.value
         if is_crit:
@@ -98,7 +99,7 @@ class PlayerStats:
         """Roll a chance boosted by luck. Use it for drops and rare upgrades."""
         return rng.random() < min(1.0, chance * self.luck.value)
 
-    # --- hp ---------------------------------------------------------------
+    # HP
 
     def take_damage(self, amount):
         self.hp = max(0, self.hp - self.damage_taken(amount))
@@ -110,7 +111,7 @@ class PlayerStats:
     def alive(self):
         return self.hp > 0
 
-    # --- stat sheet -------------------------------------------------------
+    # STAT SHEET
 
     def sheet(self):
         """(label, text) rows for the stat sheet screen."""

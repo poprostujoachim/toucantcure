@@ -2,6 +2,7 @@ import random
 
 import pygame
 
+from subfunctions.enemy import Enemy, spawn_swarm
 from subfunctions.player import Player
 
 SCREEN_WIDTH = 1280
@@ -55,47 +56,79 @@ def main():
     font = pygame.font.SysFont(None, 32)
 
     arena = pygame.Rect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT).inflate(-2 * ARENA_MARGIN, -2 * ARENA_MARGIN)
-    player = Player(*arena.center)
-    show_stats = False
+    player = Player(*arena.center)  # Player starts in the center of the arena.
+    lvl1_basic_e = Enemy(300, 200, speed=100, radius=20)
+    lvl1_melee_e = Enemy(1000, 500, speed=140, radius=20, attack_style="contact")
+    enemies = [lvl1_basic_e, lvl1_melee_e]
+    enemies += spawn_swarm(1000, 150)
+    enemy_projectiles = pygame.sprite.Group()  # Holds active enemy shots so we can update and remove them together.
+    show_stats = False 
+    is_paused = False
+
 
     running = True
     while running:
-        # Cap dt so dragging the window doesn't teleport the player.
-        dt = min(clock.tick(FPS) / 1000, 0.05)
+        dt = min(clock.tick(FPS) / 1000, 0.05) 
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                running = False
+                running = False 
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_t and player.alive:
-                    player.take_damage(10)  # test hit, no enemies yet
+                    player.take_damage(10) 
                     if not player.alive:
-                        print("infected")
+                        print("infected") 
                 elif event.key == pygame.K_r:
-                    player = Player(*arena.center)
+                    player = Player(*arena.center) 
                 elif event.key == pygame.K_TAB:
-                    show_stats = not show_stats
+                    show_stats = not show_stats 
                 elif event.key == pygame.K_u:
                     name, bonus = random.choice(TEST_UPGRADES)
-                    player.stats.add(name, **bonus)  # test upgrade, no shop yet
+                    player.stats.add(name, **bonus) 
                     print("upgrade:", name, bonus)
+                elif event.key == pygame.K_ESCAPE:
+                    is_paused = not is_paused
+        
+        if not is_paused:
+            if player.alive:
+                player.update(dt, pygame.key.get_pressed(), arena) 
 
-        if player.alive:
-            player.update(dt, pygame.key.get_pressed(), arena)
+            for enemy in enemies:
+                new_projectiles = enemy.update(player.pos, dt)  
+                enemy_projectiles.add(new_projectiles)
+                if player.alive:
+                    player.take_damage(enemy.contact_hit(player.pos, player.radius))
 
-        screen.fill(BACKGROUND_COLOR)
-        pygame.draw.rect(screen, ARENA_BORDER_COLOR, arena, 2)
+            for projectile in list(enemy_projectiles):
+                if projectile.update(dt):
+                    projectile.kill() 
+                    continue
+                if (projectile.pos - player.pos).length() <= projectile.radius + player.radius: 
+                    player.take_damage(projectile.damage)
+                    projectile.kill() 
+
+        screen.fill(BACKGROUND_COLOR)  # Clear the previous frame.
+        pygame.draw.rect(screen, ARENA_BORDER_COLOR, arena, 2)  # Draw arena border.
         player.draw(screen)
+        for enemy in enemies:
+            enemy.draw(screen)
 
-        hp_text = font.render(f"HP: {player.hp:.0f}/{player.max_hp:.0f}", True, TEXT_COLOR)
-        screen.blit(hp_text, (10, 10))
+        for projectile in enemy_projectiles:
+            projectile.draw(screen)  # Draw each active enemy projectile.
+
+        hp_text = font.render(f"HP: {player.hp:.0f}/{player.max_hp:.0f}", True, TEXT_COLOR)  # Show the player's current and max HP at the top-left.
+        screen.blit(hp_text, (10, 10))  # Draw the HP text onto the game screen.
         if not player.alive:
-            dead_text = font.render("infected - press R to restart", True, TEXT_COLOR)
+            dead_text = font.render("infected - press R to restart", True, TEXT_COLOR) 
             screen.blit(dead_text, dead_text.get_rect(center=arena.center))
-        if show_stats:
-            draw_stat_sheet(screen, font, player.stats)
+        if show_stats or is_paused:
+            draw_stat_sheet(screen, font, player.stats)  # Draw the stat overlay when the player toggles it.
 
-        pygame.display.flip()
+        if is_paused:
+            paused_text = font.render("PAUSED", True, TEXT_COLOR)
+            screen.blit(paused_text, paused_text.get_rect(center=arena.center))
+            
+        pygame.display.flip()  # Swap the back buffer to the visible screen.
 
     pygame.quit()
 
