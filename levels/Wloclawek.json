@@ -1,0 +1,9 @@
+{
+  "city": "Wloclawek",
+  "country": "Poland",
+  "year": 2001,
+  "disease": "RUBELLA",
+  "cases": 84419,
+  "vaccine_coverage": 0.97,
+  "outbreak_strength": 0.83
+}

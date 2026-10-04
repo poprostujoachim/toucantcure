@@ -1,0 +1,9 @@
+{
+  "city": "Leiden",
+  "country": "Netherlands",
+  "year": 2024,
+  "disease": "PERTUSSIS",
+  "cases": 18180,
+  "vaccine_coverage": 0.91,
+  "outbreak_strength": 0.33
+}

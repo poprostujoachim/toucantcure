@@ -1,0 +1,9 @@
+{
+  "city": "Tallinn",
+  "country": "Estonia",
+  "year": 2010,
+  "disease": "PERTUSSIS",
+  "cases": 1295,
+  "vaccine_coverage": 0.94,
+  "outbreak_strength": 0.0
+}

@@ -1,0 +1,9 @@
+{
+  "city": "Sparta",
+  "country": "Greece",
+  "year": 1996,
+  "disease": "MEASLES",
+  "cases": 6082,
+  "vaccine_coverage": 0.9,
+  "outbreak_strength": 0.17
+}

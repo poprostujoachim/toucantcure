@@ -1,0 +1,9 @@
+{
+  "city": "Dusseldorf",
+  "country": "Germany",
+  "year": 1980,
+  "disease": "MEASLES",
+  "cases": 28745,
+  "vaccine_coverage": 0.25,
+  "outbreak_strength": 0.5
+}

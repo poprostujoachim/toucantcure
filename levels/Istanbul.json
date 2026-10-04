@@ -1,0 +1,9 @@
+{
+  "city": "Istanbul",
+  "country": "Turkey",
+  "year": 1993,
+  "disease": "MEASLES",
+  "cases": 34285,
+  "vaccine_coverage": 0.72,
+  "outbreak_strength": 0.67
+}

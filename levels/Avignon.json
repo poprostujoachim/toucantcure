@@ -1,0 +1,9 @@
+{
+  "city": "Avignon",
+  "country": "France",
+  "year": 1991,
+  "disease": "MEASLES",
+  "cases": 156849,
+  "vaccine_coverage": 0.74,
+  "outbreak_strength": 1.0
+}
