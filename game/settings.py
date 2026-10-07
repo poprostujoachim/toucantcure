@@ -19,6 +19,7 @@ TEXT_COLOR = (240, 240, 240)
 DODGE_TEXT_COLOR = (170, 220, 255)
 
 DEBUG = True
+ADMIN_SPAWN_DISTANCE = 300
 KEY_STAT_SHEET = pygame.K_TAB
 
 KEYS_UP = (pygame.K_w, pygame.K_z, pygame.K_UP)
@@ -64,7 +65,7 @@ AFTERIMAGE_LIFETIME = 0.2
 
 XP_BASE = 5
 XP_PER_LEVEL = 6
-MAX_WEAPONS = 2
+MAX_WEAPONS = 4
 
 COVERAGE_LOW, COVERAGE_HIGH = 0.70, 0.99
 CURE_CHANCE_MIN, CURE_CHANCE_MAX = 0.03, 0.15
@@ -93,10 +94,10 @@ ENEMY_TYPES = {
     "big":      {"sprite": "duck_big.png",      "scale": 4,   "hp": 90, "speed": 55,  "damage": 20, "xp": 8, "first_wave": 5, "attack": "contact"},
 }
 ENEMY_SHOT_RANGE = 500
-ENEMY_SHOT_COOLDOWN = 1.25
-ENEMY_SHOT_SPEED = 220
+ENEMY_SHOT_COOLDOWN = 2
+ENEMY_SHOT_SPEED = 200
 ENEMY_SHOT_DAMAGE = 10
-ENEMY_SHOT_RADIUS = 6
+ENEMY_SHOT_RADIUS = 8
 ENEMY_SHOT_LIFETIME = 3.0
 ENEMY_SHOT_COLOR = (255, 150, 40)
 ENEMY_ANIMATION_FPS = 8
@@ -110,13 +111,35 @@ CURE_TEXT_COLOR = (120, 255, 140)
 HEART_DROP_CHANCE = 0.03
 HEART_HEAL = 20
 
+# modified by milo with the boss.py
 BOSS_SPAWN_TIME = 300
 BOSS_STATS = {"name": "Toco the Enforcer", "sprite": "toucan.png", "frame_size": (32, 30), "scale": 3,
-              "hp": 1500, "speed": 70, "damage": 25, "radius": 40, "xp": 40}
+              "hp": 1500, "speed": 70, "damage": 20, "radius": 40, "xp": 40, "attack": "contact",
+              "knockback": 0.15}
 BOSS_ENRAGE_AT = 0.4
 BOSS_ENRAGE_SPEED_MULT = 1.6
+BOSS_ENRAGE_COOLDOWN_MULT = 0.6
 BOSS_ENRAGE_TINT = (255, 120, 120)
 BOSS_BANNER_TIME = 2.0
+BOSS_ATTACK_COOLDOWN = 3.0
+BOSS_WINDUP_TIME = 0.8
+BOSS_RECOVER_TIME = 1.0
+BOSS_WINDUP_BLINK_RATE = 10
+BOSS_CHARGE_SPEED = 650
+BOSS_CHARGE_TIME = 0.7
+BOSS_FAN_SHOTS = 7
+BOSS_FAN_ANGLE = 70
+BOSS_RING_SHOTS = 16
+BOSS_FEATHER_SPEED = 260
+BOSS_FEATHER_DAMAGE = 16
+BOSS_FEATHER_RADIUS = 12
+BOSS_FEATHER_LIFETIME = 3.0
+BOSS_FEATHER_COLOR = (255, 200, 60)
+BOSS_SUMMONS = {
+    "normal":  [{"type": "small", "count": 5}],
+    "enraged": [{"type": "big", "count": 5}],
+}
+BOSS_SUMMON_DISTANCE = 90
 
 GEM_SIZE = (6 * PIXEL_SCALE, 6 * PIXEL_SCALE)
 BIG_GEM_SIZE = (6 * 4, 6 * 4)
@@ -132,10 +155,10 @@ STARTING_WEAPON = "syringe"
 WEAPON_STATS = {
     "syringe": {
         "display_name": "Syringe", "desc": "Throws syringes where you face",
-        "base": {"cooldown": 1.0, "damage": 10, "count": 1, "speed": 520, "pierce": 1, "lifetime": 0.9, "spread": 10},
+        "base": {"cooldown": 0.8, "damage": 10, "count": 1, "speed": 520, "pierce": 1, "lifetime": 1.2, "spread": 10},
         "upgrades": {
             2: {"count": 1, "desc": "+1 syringe"},
-            3: {"lifetime": 0.36, "desc": "+40% range"},
+            3: {"lifetime": 1, "desc": "+40% range"},
             4: {"count": 1, "desc": "+1 syringe"},
             5: {"pierce": 2, "damage": 5, "desc": "+2 pierce, +5 damage"},
         },

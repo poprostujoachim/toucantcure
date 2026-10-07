@@ -2,6 +2,7 @@ import random
 
 import pygame
 
+from game.admin import AdminPanel
 from game.boss import Boss
 from game.pickups import HealthPickup, XPGem
 from game.player import Player
@@ -86,7 +87,14 @@ class Run:
         self.camera = pygame.Vector2(0, 0)
         self.update_camera()
 
+        # admin mode: starts paused, no waves, no automatic boss
+        self.admin = AdminPanel(self) if game.admin else None
+        if self.admin is not None:
+            self.state = "paused"
+
     def handle_event(self, event):
+        if self.admin is not None and self.admin.handle_event(event):
+            return
         if self.state == "level_up" and event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             for i, rect in enumerate(card_rects(len(self.cards))):
                 if rect.collidepoint(event.pos):
@@ -144,7 +152,8 @@ class Run:
 
         self.time += dt
         self.player.update(dt, pygame.key.get_pressed(), move_override)
-        self.spawner.update(dt)
+        if self.admin is None:
+            self.spawner.update(dt)
         self.update_boss(dt)
         for enemy in self.enemies:
             enemy.update(dt)
@@ -174,10 +183,13 @@ class Run:
 
     def update_boss(self, dt):
         self.boss_banner_timer = max(0.0, self.boss_banner_timer - dt)
-        if self.boss is None and self.time >= BOSS_SPAWN_TIME:
-            self.boss = Boss(self, self.spawner.random_spawn_point(), hp_mult=self.hp_mult)
-            self.enemies.append(self.boss)
-            self.boss_banner_timer = BOSS_BANNER_TIME
+        if self.boss is None and self.time >= BOSS_SPAWN_TIME and self.admin is None:
+            self.spawn_boss(self.spawner.random_spawn_point())
+
+    def spawn_boss(self, pos):
+        self.boss = Boss(self, pos, hp_mult=self.hp_mult)
+        self.enemies.append(self.boss)
+        self.boss_banner_timer = BOSS_BANNER_TIME
 
     def on_enemy_defeated(self, enemy):
         self.player.kills += 1
@@ -240,3 +252,5 @@ class Run:
             draw_end_screen(surface, self, "Marcus fainted...")
         elif self.state == "victory":
             draw_end_screen(surface, self, f"{self.level.get('city', self.city)} cured!")
+        if self.admin is not None:
+            self.admin.draw(surface)

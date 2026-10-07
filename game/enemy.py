@@ -52,8 +52,8 @@ class EnemyProjectile:
 class Enemy:
     curable = True
 
-    def __init__(self, run, type_name, pos, hp_mult=1.0, speed_mult=1.0):
-        stats = ENEMY_TYPES[type_name]
+    def __init__(self, run, type_name, pos, hp_mult=1.0, speed_mult=1.0, stats=None):
+        stats = stats or ENEMY_TYPES[type_name]
         self.run = run
         self.type_name = type_name
         self.pos = pygame.Vector2(pos)
@@ -63,6 +63,7 @@ class Enemy:
         self.damage = stats["damage"]
         self.xp = stats["xp"]
         self.attack = stats["attack"]
+        self.knockback = stats.get("knockback", 1.0)
         self.shot_timer = 0.0
 
         size = round(16 * stats["scale"])
@@ -78,24 +79,34 @@ class Enemy:
         self.slow_timer = 0.0
 
     def update(self, dt):
-        player = self.run.player
+        self.tick_timers(dt)
+        self.chase(dt)
+        if self.attack == "contact":
+            self.touch_player()
+        else:
+            self.shoot(dt)
+
+    def tick_timers(self, dt):
         self.animation_time += dt
         self.flash_timer = max(0.0, self.flash_timer - dt)
         self.slow_timer = max(0.0, self.slow_timer - dt)
 
-        speed = self.speed * self.speed_factor()
-        to_player = player.pos - self.pos
+    def chase(self, dt):
+        to_player = self.run.player.pos - self.pos
         if to_player.length_squared() > 1:
-            self.pos += to_player.normalize() * speed * dt
+            self.pos += to_player.normalize() * self.speed * self.speed_factor() * dt
 
-        if self.attack == "contact":
-            if self.pos.distance_squared_to(player.pos) < (self.radius + player.radius) ** 2:
-                player.take_damage(self.damage)
-        else:
-            self.shot_timer = max(0.0, self.shot_timer - dt)
-            if self.shot_timer <= 0 and to_player.length_squared() <= ENEMY_SHOT_RANGE ** 2:
-                self.shot_timer = ENEMY_SHOT_COOLDOWN
-                self.run.enemy_projectiles.append(EnemyProjectile(self.pos, player.pos))
+    def touch_player(self):
+        player = self.run.player
+        if self.pos.distance_squared_to(player.pos) < (self.radius + player.radius) ** 2:
+            player.take_damage(self.damage)
+
+    def shoot(self, dt):
+        player = self.run.player
+        self.shot_timer = max(0.0, self.shot_timer - dt)
+        if self.shot_timer <= 0 and self.pos.distance_squared_to(player.pos) <= ENEMY_SHOT_RANGE ** 2:
+            self.shot_timer = ENEMY_SHOT_COOLDOWN
+            self.run.enemy_projectiles.append(EnemyProjectile(self.pos, player.pos))
 
     def speed_factor(self):
         if self.slow_timer > 0:
@@ -109,7 +120,7 @@ class Enemy:
         if knockback_from is not None:
             away = self.pos - knockback_from
             if away.length_squared() > 0:
-                self.pos += away.normalize() * KNOCKBACK_DISTANCE * (2 if crit else 1)
+                self.pos += away.normalize() * KNOCKBACK_DISTANCE * self.knockback * (2 if crit else 1)
 
         if self.curable and self.run.player.stats.cured():
             self.cured = True

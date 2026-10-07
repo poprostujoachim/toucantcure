@@ -47,6 +47,7 @@ class Player:
 
         self.facing = pygame.Vector2(1, 0)
         self.moving = False
+        self.invincible = False
         self.invulnerable_timer = 0.0
         self.dash_timer = 0.0
         self.dash_cooldown_timer = 0.0
@@ -142,7 +143,7 @@ class Player:
             self.afterimages.append([self.current_frame().copy(), pygame.Vector2(self.pos), AFTERIMAGE_LIFETIME])
 
     def take_damage(self, amount):
-        if self.invulnerable or not self.alive:
+        if self.invincible or self.invulnerable or not self.alive:
             return False
         if self.stats.dodged():
             self.invulnerable_timer = INVULNERABLE_TIME

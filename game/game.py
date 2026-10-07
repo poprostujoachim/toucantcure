@@ -5,12 +5,13 @@ from game.settings import BACKGROUND_COLOR, FPS, MAX_DT, SCREEN_HEIGHT, SCREEN_W
 
 
 class Game:
-    def __init__(self):
+    def __init__(self, admin=False):
         pygame.init()
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         pygame.display.set_caption(TITLE)
         self.clock = pygame.time.Clock()
         self.running = True
+        self.admin = admin
         self.current_run = None
         self.start_run()
 

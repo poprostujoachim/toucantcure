@@ -97,9 +97,10 @@ class WaveSpawner:
                 weights.append(FEATURED_WEIGHT if name == self.scaling["featured"] else 1)
         return random.choices(names, weights)[0]
 
-    def spawn(self, type_name, pos):
+    def spawn(self, type_name, pos, stats=None):
         speed_mult = self.wave["enemy_speed"] * self.scaling["speed_mult"]
-        self.run.enemies.append(Enemy(self.run, type_name, pos, hp_mult=self.run.hp_mult, speed_mult=speed_mult))
+        self.run.enemies.append(Enemy(self.run, type_name, pos, hp_mult=self.run.hp_mult, speed_mult=speed_mult,
+                                      stats=stats))
 
     def spawn_distance(self):
         return math.hypot(SCREEN_WIDTH, SCREEN_HEIGHT) / 2 + SPAWN_MARGIN
