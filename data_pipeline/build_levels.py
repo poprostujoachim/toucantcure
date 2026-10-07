@@ -2,7 +2,7 @@ import json
 import os
 import sqlite3
 
-# City name (same spelling as Eva's folders) -> (country code, country name)
+# City name
 CITIES = {
     "Leiden": ("NLD", "Netherlands"),
     "Tallinn": ("EST", "Estonia"),
@@ -50,7 +50,7 @@ for level in levels:
     position = all_cases.index(level["cases"])
     level["outbreak_strength"] = round(position / (len(all_cases) - 1), 2)
 
-# Create the levels folder if it doesn't exist (git rm removes it when empty)
+# Create the levels folder if it doesn't exist
 os.makedirs("levels", exist_ok=True)
 
 for level in levels:
