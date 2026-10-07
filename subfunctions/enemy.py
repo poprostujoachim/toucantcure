@@ -31,8 +31,9 @@ class EnemyProjectile(pygame.sprite.Sprite):
         self.age += delta_time
         return self.age >= self.lifetime  # True when the projectile has expired and should be removed.
 
-    def draw(self, surface):
-        pygame.draw.circle(surface, "orange", (round(self.pos.x), round(self.pos.y)), self.radius)
+    def draw(self, surface, camera_x, camera_y):
+        screen_pos = (round(self.pos.x - camera_x), round(self.pos.y - camera_y))
+        pygame.draw.circle(surface, "orange", screen_pos, self.radius)
 
 
 def load_enemy_frames(size, sprite='duck_bird.png'):
@@ -124,10 +125,12 @@ class Enemy(pygame.sprite.Sprite):
         self.contact_cooldown = self.contact_interval
         return self.contact_damage
 
-    def draw(self, surface):
+    def draw(self, surface, camera_x, camera_y):
         frame_index = int(self.animation_time * ANIMATION_FPS) % len(self.frames)
         texture = self.frames[frame_index]
-        surface.blit(texture, texture.get_rect(center=(round(self.pos.x), round(self.pos.y))))
+        # Shift from world position to screen position using the camera.
+        screen_pos = (round(self.pos.x - camera_x), round(self.pos.y - camera_y))
+        surface.blit(texture, texture.get_rect(center=screen_pos))
 
 
 SWARM_SIZE = (3, 8)

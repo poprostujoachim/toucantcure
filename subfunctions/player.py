@@ -2,6 +2,7 @@ import os
 
 import pygame
 
+from subfunctions.generation import is_walkable
 from subfunctions.stats import PlayerStats
 
 ASSETS_DIR = os.path.join(os.path.dirname(__file__), "assets")
@@ -54,16 +55,23 @@ class Player(pygame.sprite.Sprite):
     def take_damage(self, amount):
         self.stats.take_damage(amount)
 
-    def update(self, delta_time, keys, bounds):
+    def update(self, delta_time, keys, city_name):
         speed = self.stats.move_speed.value
+        new_x, new_y = self.pos.x, self.pos.y
         if keys[pygame.K_w]:
-            self.pos.y -= speed * delta_time
+            new_y -= speed * delta_time
         if keys[pygame.K_s]:
-            self.pos.y += speed * delta_time
+            new_y += speed * delta_time
         if keys[pygame.K_a]:
-            self.pos.x -= speed * delta_time
+            new_x -= speed * delta_time
         if keys[pygame.K_d]:
-            self.pos.x += speed * delta_time
+            new_x += speed * delta_time
+
+        # Check each axis on its own so the player slides along walls instead of sticking.
+        if is_walkable(new_x, self.pos.y, city_name):
+            self.pos.x = new_x
+        if is_walkable(self.pos.x, new_y, city_name):
+            self.pos.y = new_y
 
         if keys[pygame.K_w]:
             self.facing = "back"
@@ -79,13 +87,11 @@ class Player(pygame.sprite.Sprite):
         if any(keys[key] for key in (pygame.K_w, pygame.K_s, pygame.K_a, pygame.K_d)):
             self.animation_time += delta_time
 
-        # bounds is the arena Rect, so stay inside it rather than the screen.
-        self.pos.x = max(bounds.left + self.radius, min(self.pos.x, bounds.right - self.radius))
-        self.pos.y = max(bounds.top + self.radius, min(self.pos.y, bounds.bottom - self.radius))
-
-    def draw(self, surface):
+    def draw(self, surface, camera_x, camera_y):
         frame_index = int(self.animation_time * PLAYER_ANIMATION_FPS) % PLAYER_FRAME_COUNT
         image = self.frames[self.facing][frame_index]
         if self.facing == "side" and self.facing_left:
             image = pygame.transform.flip(image, True, False)
-        surface.blit(image, image.get_rect(center=(round(self.pos.x), round(self.pos.y))))
+        # Shift from world position to screen position using the camera.
+        screen_pos = (round(self.pos.x - camera_x), round(self.pos.y - camera_y))
+        surface.blit(image, image.get_rect(center=screen_pos))
