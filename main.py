@@ -3,15 +3,14 @@ import random
 import pygame
 
 from subfunctions.enemy import Enemy, spawn_swarm
+from subfunctions.generation import draw_infinite_background, find_spawn_point
 from subfunctions.player import Player
 
 SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 720
 FPS = 60
-ARENA_MARGIN = 40
 
-BACKGROUND_COLOR = (25, 25, 35)
-ARENA_BORDER_COLOR = (70, 70, 90)
+SHEET_BORDER_COLOR = (70, 70, 90)
 TEXT_COLOR = (230, 230, 230)
 SHEET_COLOR = (15, 15, 25)
 
@@ -37,7 +36,7 @@ def draw_stat_sheet(screen, font, stats):
     panel = pygame.Rect(0, 0, 420, line_height * (len(rows) + 1) + 20)
     panel.topright = (SCREEN_WIDTH - 10, 10)
     pygame.draw.rect(screen, SHEET_COLOR, panel)
-    pygame.draw.rect(screen, ARENA_BORDER_COLOR, panel, 2)
+    pygame.draw.rect(screen, SHEET_BORDER_COLOR, panel, 2)
 
     y = panel.top + 10
     screen.blit(font.render("Stats", True, TEXT_COLOR), (panel.left + 12, y))
@@ -55,8 +54,10 @@ def main():
     clock = pygame.time.Clock()
     font = pygame.font.SysFont(None, 32)
 
-    arena = pygame.Rect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT).inflate(-2 * ARENA_MARGIN, -2 * ARENA_MARGIN)
-    player = Player(*arena.center)  # Player starts in the center of the arena.
+    screen_center = screen.get_rect().center
+    current_city = "Leiden"  # Picks the house style and the generated map.
+    spawn = find_spawn_point(*screen_center, current_city)  # Nearest tile the player can walk on.
+    player = Player(*spawn)
     lvl1_basic_e = Enemy(300, 200, speed=100, radius=20)
     lvl1_melee_e = Enemy(1000, 500, speed=140, radius=20, attack_style="contact")
     enemies = [lvl1_basic_e, lvl1_melee_e]
@@ -79,7 +80,7 @@ def main():
                     if not player.alive:
                         print("infected") 
                 elif event.key == pygame.K_r:
-                    player = Player(*arena.center) 
+                    player = Player(*spawn)
                 elif event.key == pygame.K_TAB:
                     show_stats = not show_stats 
                 elif event.key == pygame.K_u:
@@ -91,7 +92,7 @@ def main():
         
         if not is_paused:
             if player.alive:
-                player.update(dt, pygame.key.get_pressed(), arena) 
+                player.update(dt, pygame.key.get_pressed(), current_city)
 
             for enemy in enemies:
                 new_projectiles = enemy.update(player.pos, dt)  
@@ -107,26 +108,29 @@ def main():
                     player.take_damage(projectile.damage)
                     projectile.kill() 
 
-        screen.fill(BACKGROUND_COLOR)  # Clear the previous frame.
-        pygame.draw.rect(screen, ARENA_BORDER_COLOR, arena, 2)  # Draw arena border.
-        player.draw(screen)
+        # The camera keeps the player in the middle of the screen.
+        camera_x = player.pos.x - SCREEN_WIDTH / 2
+        camera_y = player.pos.y - SCREEN_HEIGHT / 2
+
+        draw_infinite_background(screen, camera_x, camera_y, current_city)  # Also clears the previous frame.
+        player.draw(screen, camera_x, camera_y)
         for enemy in enemies:
-            enemy.draw(screen)
+            enemy.draw(screen, camera_x, camera_y)
 
         for projectile in enemy_projectiles:
-            projectile.draw(screen)  # Draw each active enemy projectile.
+            projectile.draw(screen, camera_x, camera_y)  # Draw each active enemy projectile.
 
         hp_text = font.render(f"HP: {player.hp:.0f}/{player.max_hp:.0f}", True, TEXT_COLOR)  # Show the player's current and max HP at the top-left.
         screen.blit(hp_text, (10, 10))  # Draw the HP text onto the game screen.
         if not player.alive:
             dead_text = font.render("infected - press R to restart", True, TEXT_COLOR) 
-            screen.blit(dead_text, dead_text.get_rect(center=arena.center))
+            screen.blit(dead_text, dead_text.get_rect(center=screen_center))
         if show_stats or is_paused:
             draw_stat_sheet(screen, font, player.stats)  # Draw the stat overlay when the player toggles it.
 
         if is_paused:
             paused_text = font.render("PAUSED", True, TEXT_COLOR)
-            screen.blit(paused_text, paused_text.get_rect(center=arena.center))
+            screen.blit(paused_text, paused_text.get_rect(center=screen_center))
             
         pygame.display.flip()  # Swap the back buffer to the visible screen.
 
