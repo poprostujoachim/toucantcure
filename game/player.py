@@ -4,7 +4,8 @@ from game.assets import load_frames
 from game.settings import (AFTERIMAGE_INTERVAL, AFTERIMAGE_LIFETIME, BLINK_INTERVAL, DASH_COOLDOWN,
                            DASH_SPEED_MULT, DASH_TIME, DODGE_TEXT_COLOR, INVULNERABLE_TIME, KEYS_DOWN,
                            KEYS_LEFT, KEYS_RIGHT, KEYS_UP, PLAYER_ANIMATION_FPS, PLAYER_RADIUS,
-                           PLAYER_SHADOW_OFFSET, PLAYER_SHADOW_SIZE, PLAYER_SPRITE_SIZE, XP_BASE, XP_PER_LEVEL)
+                           PLAYER_SHADOW_OFFSET, PLAYER_SHADOW_SIZE, PLAYER_SPRITE_SIZE, WATER_SPEED_MULT,
+                           XP_BASE, XP_PER_LEVEL)
 from game.stats import PlayerStats
 from game.ui import FloatingText
 
@@ -47,6 +48,7 @@ class Player:
 
         self.facing = pygame.Vector2(1, 0)
         self.moving = False
+        self.invincible = False
         self.invulnerable_timer = 0.0
         self.dash_timer = 0.0
         self.dash_cooldown_timer = 0.0
@@ -93,13 +95,15 @@ class Player:
         self.dash_cooldown_timer = max(0.0, self.dash_cooldown_timer - dt)
 
         speed = self.stats.move_speed.value
+        if self.run.arena.is_water(self.pos):
+            speed *= WATER_SPEED_MULT
         if self.dashing:
             self.dash_timer -= dt
             self.pos += self.dash_direction * speed * DASH_SPEED_MULT * dt
             self.leave_afterimage(dt)
         else:
             self.pos += direction * speed * dt
-        self.pos = self.run.arena.clamp(self.pos, self.radius)
+        self.pos = self.run.arena.resolve(self.pos, self.radius)
 
         self.update_animation(dt, direction)
         self.heal(self.stats.regen.value * dt)
@@ -142,14 +146,14 @@ class Player:
             self.afterimages.append([self.current_frame().copy(), pygame.Vector2(self.pos), AFTERIMAGE_LIFETIME])
 
     def take_damage(self, amount):
-        if self.invulnerable or not self.alive:
+        if self.invincible or self.invulnerable or not self.alive:
             return False
         if self.stats.dodged():
             self.invulnerable_timer = INVULNERABLE_TIME
             self.run.effects.append(FloatingText("dodge", self.pos - (0, 30), DODGE_TEXT_COLOR))
             return False
 
-        self.stats.take_damage(amount)
+        self.stats.take_damage(amount * self.run.damage_mult)
         self.invulnerable_timer = INVULNERABLE_TIME
         return True
 

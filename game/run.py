@@ -2,17 +2,19 @@ import random
 
 import pygame
 
+from game.admin import AdminPanel
 from game.boss import Boss
 from game.pickups import HealthPickup, XPGem
 from game.player import Player
 from game.settings import (BOSS_BANNER_TIME, BOSS_SPAWN_TIME, CARD_COUNT, DEBUG, HEART_DROP_CHANCE, INTRO_TIME,
                            KEY_DASH, KEY_STAT_SHEET, MAX_PICKUPS, MAX_WEAPON_LEVEL, MAX_WEAPONS, PLACEHOLDER_HEAL,
-                           SCREEN_HEIGHT, SCREEN_WIDTH, STARTING_CITY, STARTING_WEAPON, TEST_UPGRADES, WEAPON_STATS)
-from game.ui import (card_rects, draw_end_screen, draw_hud, draw_intro, draw_level_up, draw_pause,
+                           RUN_END_DELAY, SCREEN_HEIGHT, SCREEN_WIDTH, STARTING_CITY, STARTING_WEAPON, TEST_UPGRADES,
+                           TIERS, WEAPON_STATS)
+from game.ui import (card_rects, city_name, draw_end_banner, draw_hud, draw_intro, draw_level_up, draw_pause,
                      draw_player_hp_bar, draw_stat_sheet)
 from game.waves import WaveSpawner, disease_info, level_scaling, load_level
 from game.weapons import make_weapon
-from game.world import Arena
+from game.world import CityMap
 
 CARD_KEYS = [pygame.K_1, pygame.K_2, pygame.K_3]
 
@@ -59,16 +61,23 @@ class Run:
         self.tier = tier
         self.state = "intro"
         self.intro_timer = INTRO_TIME
+        self.end_timer = RUN_END_DELAY
         self.time = 0.0
 
         self.level = load_level(city)
         self.disease = disease_info(self.level)
         self.scaling = level_scaling(self.level)
-        self.hp_mult = 1.0
+        tier_scaling = TIERS.get(tier, TIERS[1])
+        self.hp_mult = tier_scaling["hp_mult"]
+        self.count_mult = tier_scaling["count_mult"]
+        self.damage_mult = tier_scaling["damage_mult"]
+        self.shot_cooldown_mult = tier_scaling["shot_cooldown_mult"]
 
-        self.arena = Arena()
+        self.arena = CityMap(city)
         self.player = Player(self, (self.arena.width / 2, self.arena.height / 2))
         self.player.stats.cure_chance.base = self.scaling["cure_chance"]
+        for stat, flat in tier_scaling["player_bonus"].items():
+            self.player.stats.add(stat, flat)
         self.player.weapons.append(make_weapon(STARTING_WEAPON, self.player))
 
         self.enemies = []
@@ -86,7 +95,13 @@ class Run:
         self.camera = pygame.Vector2(0, 0)
         self.update_camera()
 
+        self.admin = AdminPanel(self) if game.admin else None
+        if self.admin is not None:
+            self.state = "paused"
+
     def handle_event(self, event):
+        if self.admin is not None and self.admin.handle_event(event):
+            return
         if self.state == "level_up" and event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             for i, rect in enumerate(card_rects(len(self.cards))):
                 if rect.collidepoint(event.pos):
@@ -111,15 +126,12 @@ class Run:
             if event.key in (pygame.K_ESCAPE, pygame.K_p):
                 self.state = "playing"
             elif event.key == pygame.K_q:
-                self.game.running = False
+                self.game.change_state("title")
         elif self.state == "level_up":
             if event.key in CARD_KEYS and CARD_KEYS.index(event.key) < len(self.cards):
                 self.choose_card(CARD_KEYS.index(event.key))
         elif self.state in ("game_over", "victory"):
-            if event.key == pygame.K_r:
-                self.game.start_run(self.city, self.tier)
-            elif event.key == pygame.K_ESCAPE:
-                self.game.running = False
+            self.game.show_results(self)
 
     def debug_keys(self, key):
         if key == pygame.K_F1:
@@ -139,12 +151,18 @@ class Run:
             if self.intro_timer <= 0:
                 self.state = "playing"
             return
+        if self.state in ("game_over", "victory"):
+            self.end_timer -= dt
+            if self.end_timer <= 0:
+                self.game.show_results(self)
+            return
         if self.state != "playing":
             return
 
         self.time += dt
         self.player.update(dt, pygame.key.get_pressed(), move_override)
-        self.spawner.update(dt)
+        if self.admin is None:
+            self.spawner.update(dt)
         self.update_boss(dt)
         for enemy in self.enemies:
             enemy.update(dt)
@@ -174,10 +192,13 @@ class Run:
 
     def update_boss(self, dt):
         self.boss_banner_timer = max(0.0, self.boss_banner_timer - dt)
-        if self.boss is None and self.time >= BOSS_SPAWN_TIME:
-            self.boss = Boss(self, self.spawner.random_spawn_point(), hp_mult=self.hp_mult)
-            self.enemies.append(self.boss)
-            self.boss_banner_timer = BOSS_BANNER_TIME
+        if self.boss is None and self.time >= BOSS_SPAWN_TIME and self.admin is None:
+            self.spawn_boss(self.spawner.random_spawn_point())
+
+    def spawn_boss(self, pos):
+        self.boss = Boss(self, pos, hp_mult=self.hp_mult)
+        self.enemies.append(self.boss)
+        self.boss_banner_timer = BOSS_BANNER_TIME
 
     def on_enemy_defeated(self, enemy):
         self.player.kills += 1
@@ -219,6 +240,7 @@ class Run:
 
         view = pygame.Rect(self.camera, (SCREEN_WIDTH, SCREEN_HEIGHT)).inflate(200, 200)
         visible = [self.player] + [e for e in self.enemies if view.collidepoint(e.pos)]
+        visible += self.arena.visible_obstacles(self.camera)
         for thing in sorted(visible, key=lambda t: t.pos.y):
             thing.draw(surface, self.camera)
         for projectile in self.projectiles + self.enemy_projectiles:
@@ -234,9 +256,11 @@ class Run:
             draw_level_up(surface, self.cards)
         elif self.state == "paused":
             draw_pause(surface)
+        elif self.state == "game_over":
+            draw_end_banner(surface, "Marcus fainted...", False)
+        elif self.state == "victory":
+            draw_end_banner(surface, f"{city_name(self.city)} cured!", True)
         if self.show_stats or self.state == "paused":
             draw_stat_sheet(surface, self.player.stats)
-        elif self.state == "game_over":
-            draw_end_screen(surface, self, "Marcus fainted...")
-        elif self.state == "victory":
-            draw_end_screen(surface, self, f"{self.level.get('city', self.city)} cured!")
+        if self.admin is not None:
+            self.admin.draw(surface)

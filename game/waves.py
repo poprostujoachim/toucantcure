@@ -9,9 +9,9 @@ from game.enemy import Enemy
 from game.settings import (COVERAGE_HIGH, COVERAGE_LOW, CURE_CHANCE_MAX, CURE_CHANCE_MIN, DEFAULT_COVERAGE,
                            DEFAULT_R0, DEFAULT_STRENGTH, DEFAULT_WAVES, DISEASE_INFO, ENEMY_MULT_MAX, ENEMY_MULT_MIN,
                            ENEMY_TYPES, FEATURED_ENEMY, FEATURED_WEIGHT, MAX_ENEMIES, R0_SPEED_MAX, R0_SPEED_MIN,
-                           SCREEN_HEIGHT,
-                           SCREEN_WIDTH, SPAWN_MARGIN, SWARM_INTERVAL, SWARM_SIZE, SWARM_SPREAD, WAVE_COUNT_GROWTH,
-                           WAVE_INTERVAL_GROWTH, WAVE_MAX_SPEED, WAVE_MIN_INTERVAL, WAVE_SPEED_GROWTH)
+                           SCREEN_HEIGHT, SCREEN_WIDTH, SPAWN_CLEARANCE, SPAWN_MARGIN, SWARM_INTERVAL, SWARM_SIZE,
+                           SWARM_SPREAD, WAVE_COUNT_GROWTH, WAVE_INTERVAL_GROWTH, WAVE_MAX_SPEED, WAVE_MIN_INTERVAL,
+                           WAVE_SPEED_GROWTH)
 
 LEVELS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "levels")
 
@@ -28,7 +28,7 @@ def load_level(city):
 
 def disease_info(level):
     code = level.get("disease", "")
-    return DISEASE_INFO.get(code, {"name": code.title(), "pathogen": None, "r0": DEFAULT_R0})
+    return DISEASE_INFO.get(code, {"name": code.title() or "Unknown disease", "pathogen": None, "r0": DEFAULT_R0})
 
 
 def level_scaling(level):
@@ -72,7 +72,7 @@ class WaveSpawner:
         self.spawned_in_wave = 0
 
     def wave_size(self):
-        return max(1, round(self.wave["enemy_count"] * self.scaling["enemy_mult"]))
+        return max(1, round(self.wave["enemy_count"] * self.scaling["enemy_mult"] * self.run.count_mult))
 
     def update(self, dt):
         self.spawn_timer -= dt
@@ -97,28 +97,27 @@ class WaveSpawner:
                 weights.append(FEATURED_WEIGHT if name == self.scaling["featured"] else 1)
         return random.choices(names, weights)[0]
 
-    def spawn(self, type_name, pos):
+    def spawn(self, type_name, pos, stats=None):
         speed_mult = self.wave["enemy_speed"] * self.scaling["speed_mult"]
-        self.run.enemies.append(Enemy(self.run, type_name, pos, hp_mult=self.run.hp_mult, speed_mult=speed_mult))
+        self.run.enemies.append(Enemy(self.run, type_name, pos, hp_mult=self.run.hp_mult, speed_mult=speed_mult,
+                                      stats=stats))
 
     def spawn_distance(self):
         return math.hypot(SCREEN_WIDTH, SCREEN_HEIGHT) / 2 + SPAWN_MARGIN
 
-    def random_spawn_point(self, angle=None):
+    def random_spawn_point(self):
         arena = self.run.arena
         for _ in range(10):
-            a = angle if angle is not None else random.uniform(0, 360)
-            point = self.run.player.pos + pygame.Vector2(self.spawn_distance(), 0).rotate(a)
-            if arena.inner_rect.collidepoint(point):
+            point = self.run.player.pos + pygame.Vector2(self.spawn_distance(), 0).rotate(random.uniform(0, 360))
+            if arena.is_free(point, SPAWN_CLEARANCE):
                 return point
-            angle = None
-        return arena.clamp(point, 30)
+        return arena.resolve(point, SPAWN_CLEARANCE)
 
     def spawn_swarm(self):
         center = self.random_spawn_point()
-        for _ in range(max(1, round(SWARM_SIZE * self.scaling["enemy_mult"]))):
+        for _ in range(max(1, round(SWARM_SIZE * self.scaling["enemy_mult"] * self.run.count_mult))):
             if len(self.run.enemies) >= MAX_ENEMIES:
                 return
             offset = pygame.Vector2(random.uniform(-SWARM_SPREAD, SWARM_SPREAD),
                                     random.uniform(-SWARM_SPREAD, SWARM_SPREAD))
-            self.spawn("small", self.run.arena.clamp(center + offset, 30))
+            self.spawn("small", self.run.arena.resolve(center + offset, SPAWN_CLEARANCE))

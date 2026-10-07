@@ -3,7 +3,7 @@
 ## How to use:
 first: 
 
-`from subfunctions.levels import load_level`
+`from game.waves import load_level`
 
 then: 
 
@@ -26,6 +26,9 @@ The keys to use:
 - cases (for the whole country)
 - vaccine_coverage (goes from 0 to 1)
 - outbreak_strength (rank of the countries we have, 0 for weakest 1 for strongest)
+
+The game only uses these numbers to scale the levels (cure rate, how many enemies, which enemy types).
+Players never see the years or case counts: every city has its own themed look (for example ancient Sparta).
 
 outbreak strength pretty much evens out the jumps between levels
 sorted the cities by cases, smallest to biggest
@@ -56,11 +59,30 @@ vaccination info. from that we get disease, year, cases, coverage.
 (better to keep the database off gh as we would be adding 50 Mb
 to the repo every time we rebuild as git keeps every copy i think)
 
-python -m pip install pandas openpyxl
+python -m pip install -r requirements-dev.txt
 
 From the main folder, run python data_pipeline/load_database.py 
 (takes a bit of time), then python data_pipeline/build_levels.py. 
 Script creates the database.
+
+load_database.py prints a junk report (how many rows each filter throws away):
+
+    coverage: 396,212 rows -> WUENIC only 89,767 -> countries only 78,013 -> with a year and a value 58,291
+    cases: 90,400 rows -> countries only 87,322 -> with a year and a count 66,741 -> diseases we use 28,577
+
+build_levels.py prints a summary table of the 7 levels.
+Running it twice gives exactly the same files.
+
+
+## Tests
+
+From the main folder: python -m pytest
+
+- tests/test_levels.py checks the level files (7 cities, sane numbers, strength is a rank, the game turns
+  them into sane gameplay numbers). No database needed.
+- tests/test_pipeline.py checks the database against known numbers (Ghana MCV1 1980 = 16%, Netherlands
+  measles 2013 = 2,632 cases, ...) and fails if levels/*.json are out of date. Skipped if
+  data/who_data.db doesn't exist yet.
 
 
 ## Issues 

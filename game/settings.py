@@ -9,16 +9,110 @@ MAX_DT = 0.05
 PIXEL_SCALE = 3
 TILE_SIZE = 16 * PIXEL_SCALE
 
-ARENA_WIDTH = 2400
-ARENA_HEIGHT = 2400
-WALL_THICKNESS = 40
+VERSION = "0.3.0"
 
-BACKGROUND_COLOR = (15, 25, 18)
-WALL_EDGE_COLOR = (10, 18, 12)
-TEXT_COLOR = (240, 240, 240)
-DODGE_TEXT_COLOR = (170, 220, 255)
+MAP_TILES = 50
+OBSTACLE_SIZE = 2 * TILE_SIZE
+WATER_SPEED_MULT = 0.6
+START_AREA_TILES = 5
+MIN_ROAD_GAP = 6
+GROUND_DARKEN_CHANCE = 0.2
+GROUND_DARKEN_ALPHA = (15, 26)
+HOUSE_SOLID_PART = 0.55
+TREE_TRUNK_WIDTH = 0.3
+TREE_TRUNK_HEIGHT = 0.3
+CANAL_CHANCE = 0.5
+COAST_WIDTH = (4, 6)
+POND_COUNT = (2, 4)
+POND_RADIUS = (2.0, 3.5)
+SPAWN_CLEARANCE = 24
+CITY_ORDER = ["Leiden", "Tallinn", "Istanbul", "Sparta", "Wloclawek", "Dusseldorf", "Avignon"]
+CITY_MAPS = {
+    "Leiden":     {"seed": 1, "roads_h": 3, "roads_v": 3, "water": "canals", "house_density": 0.45, "tree_density": 0.03},
+    "Tallinn":    {"seed": 2, "roads_h": 2, "roads_v": 3, "water": "coast",  "house_density": 0.35, "tree_density": 0.06},
+    "Istanbul":   {"seed": 3, "roads_h": 4, "roads_v": 3, "water": "coast",  "house_density": 0.55, "tree_density": 0.02},
+    "Sparta":     {"seed": 4, "roads_h": 2, "roads_v": 2, "water": "ponds",  "house_density": 0.25, "tree_density": 0.07},
+    "Wloclawek":  {"seed": 5, "roads_h": 3, "roads_v": 2, "water": "ponds",  "house_density": 0.40, "tree_density": 0.05},
+    "Dusseldorf": {"seed": 6, "roads_h": 4, "roads_v": 4, "water": "canals", "house_density": 0.55, "tree_density": 0.02},
+    "Avignon":    {"seed": 7, "roads_h": 3, "roads_v": 3, "water": "canals", "house_density": 0.40, "tree_density": 0.04},
+}
+DEFAULT_CITY_MAP = {"seed": 0, "roads_h": 3, "roads_v": 3, "water": "ponds", "house_density": 0.4, "tree_density": 0.04}
+CITY_POSITIONS = {
+    "Leiden": (52.16, 4.49),
+    "Tallinn": (59.44, 24.75),
+    "Istanbul": (41.01, 28.98),
+    "Sparta": (37.07, 22.43),
+    "Wloclawek": (52.65, 19.07),
+    "Dusseldorf": (51.23, 6.78),
+    "Avignon": (43.95, 4.81),
+}
+CITY_MAP_NUDGE = {"Leiden": (-30, -40), "Dusseldorf": (20, 30)}
+CITY_DISPLAY_NAMES = {"Wloclawek": "Włocławek", "Dusseldorf": "Düsseldorf"}
+
+UI_COLORS = {
+    "background": (14, 20, 26),
+    "panel": (30, 36, 50),
+    "panel_hover": (52, 62, 86),
+    "panel_border": (220, 226, 236),
+    "text": (240, 240, 240),
+    "muted": (160, 168, 186),
+    "disabled": (95, 100, 112),
+    "accent": (255, 200, 110),
+    "good": (120, 230, 140),
+    "danger": (235, 80, 80),
+    "xp": (80, 150, 255),
+    "hp": (220, 60, 60),
+    "bar_back": (24, 26, 34),
+    "boss": (200, 70, 210),
+    "common": (230, 230, 230),
+    "rare": (90, 160, 255),
+    "epic": (190, 110, 255),
+    "locked": (110, 110, 120),
+    "cured": (110, 220, 130),
+}
+BACKGROUND_COLOR = UI_COLORS["background"]
+TEXT_COLOR = UI_COLORS["text"]
+FONT_FILE = "fonts/PressStart2P-Regular.ttf"
+PIXEL_FONT_SCALE = 0.5
+PANEL_ALPHA = 215
+OVERLAY_ALPHA = 160
+FADE_TIME = 0.2
+RUN_END_DELAY = 1.5
+CREDITS_SCROLL_SPEED = 40
+MENU_DUCK_SIZE = 144
+MAP_RECT = (40, 90, 820, 590)
+MAP_MARGIN_DEGREES = 3
+CITY_DOT_RADIUS = 14
+CREDITS_LINES = [
+    ("TouCan'tCure", 64),
+    ("Software Development · Group 6", 30),
+    ("", 30),
+    ("Team", 40),
+    ("Joachim Wiczyński · Milo Fages: player, enemies, weapons", 28),
+    ("Eva Smeyers: world generation and UI", 28),
+    ("Kerem Mamati · Akram Taher Fadlallah: items, shop and upgrades", 28),
+    ("Martin Lipp · Kerem Mamati · Akram Taher Fadlallah: data", 28),
+    ("", 30),
+    ("Data", 40),
+    ("WHO/UNICEF Estimates of National Immunization Coverage (WUENIC), 2025 revision", 24),
+    ("and WHO reported cases. WHO Immunization Data portal, retrieved 21 September 2026.", 24),
+    ("Polio coverage mirror: Our World in Data.", 24),
+    ("", 30),
+    ("Assets: see CREDITS.md", 28),
+]
+DIFFICULTY_INFO = [
+    {"tier": 1, "name": "I · Outbreak", "length": "about 5 min", "bosses": "Boss 1 at 5:00", "requirement": ""},
+    {"tier": 2, "name": "II · Epidemic", "length": "about 10 min", "bosses": "Bosses at 5:00 and 10:00",
+     "requirement": "Beat Toco on Outbreak"},
+    {"tier": 3, "name": "III · Pandemic", "length": "about 15 min", "bosses": "Bosses at 5:00, 10:00 and 15:00",
+     "requirement": "Beat Dr. Beak on Epidemic"},
+    {"tier": "endless", "name": "Endless", "length": "no end", "bosses": "Bosses every 5 min",
+     "requirement": "Beat the Grand Toucan"},
+]
 
 DEBUG = True
+ADMIN_SPAWN_DISTANCE = 300
+DODGE_TEXT_COLOR = (170, 220, 255)
 KEY_STAT_SHEET = pygame.K_TAB
 
 KEYS_UP = (pygame.K_w, pygame.K_z, pygame.K_UP)
@@ -26,6 +120,7 @@ KEYS_DOWN = (pygame.K_s, pygame.K_DOWN)
 KEYS_LEFT = (pygame.K_a, pygame.K_q, pygame.K_LEFT)
 KEYS_RIGHT = (pygame.K_d, pygame.K_RIGHT)
 KEY_DASH = pygame.K_SPACE
+KEYS_CONFIRM = (pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_SPACE)
 
 PLAYER_STATS = {
     "max_hp":            (100,  1,    None),
@@ -64,7 +159,7 @@ AFTERIMAGE_LIFETIME = 0.2
 
 XP_BASE = 5
 XP_PER_LEVEL = 6
-MAX_WEAPONS = 2
+MAX_WEAPONS = 3
 
 COVERAGE_LOW, COVERAGE_HIGH = 0.70, 0.99
 CURE_CHANCE_MIN, CURE_CHANCE_MAX = 0.03, 0.15
@@ -93,10 +188,10 @@ ENEMY_TYPES = {
     "big":      {"sprite": "duck_big.png",      "scale": 4,   "hp": 90, "speed": 55,  "damage": 20, "xp": 8, "first_wave": 5, "attack": "contact"},
 }
 ENEMY_SHOT_RANGE = 500
-ENEMY_SHOT_COOLDOWN = 1.25
-ENEMY_SHOT_SPEED = 220
+ENEMY_SHOT_COOLDOWN = 2
+ENEMY_SHOT_SPEED = 200
 ENEMY_SHOT_DAMAGE = 10
-ENEMY_SHOT_RADIUS = 6
+ENEMY_SHOT_RADIUS = 8
 ENEMY_SHOT_LIFETIME = 3.0
 ENEMY_SHOT_COLOR = (255, 150, 40)
 ENEMY_ANIMATION_FPS = 8
@@ -110,13 +205,41 @@ CURE_TEXT_COLOR = (120, 255, 140)
 HEART_DROP_CHANCE = 0.03
 HEART_HEAL = 20
 
+TIERS = {
+    1: {"hp_mult": 0.65, "count_mult": 0.7, "damage_mult": 0.55, "shot_cooldown_mult": 2.0,
+        "player_bonus": {"max_hp": 50, "regen": 1.5}},
+    2: {"hp_mult": 1.4, "count_mult": 1.2, "damage_mult": 1.0, "shot_cooldown_mult": 1.0, "player_bonus": {}},
+    3: {"hp_mult": 1.9, "count_mult": 1.4, "damage_mult": 1.0, "shot_cooldown_mult": 1.0, "player_bonus": {}},
+    "endless": {"hp_mult": 1.9, "count_mult": 1.4, "damage_mult": 1.0, "shot_cooldown_mult": 1.0, "player_bonus": {}},
+}
 BOSS_SPAWN_TIME = 300
 BOSS_STATS = {"name": "Toco the Enforcer", "sprite": "toucan.png", "frame_size": (32, 30), "scale": 3,
-              "hp": 1500, "speed": 70, "damage": 25, "radius": 40, "xp": 40}
+              "hp": 1500, "speed": 70, "damage": 20, "radius": 40, "xp": 40, "attack": "contact",
+              "knockback": 0.15}
 BOSS_ENRAGE_AT = 0.4
 BOSS_ENRAGE_SPEED_MULT = 1.6
+BOSS_ENRAGE_COOLDOWN_MULT = 0.6
 BOSS_ENRAGE_TINT = (255, 120, 120)
 BOSS_BANNER_TIME = 2.0
+BOSS_ATTACK_COOLDOWN = 3.0
+BOSS_WINDUP_TIME = 0.8
+BOSS_RECOVER_TIME = 1.0
+BOSS_WINDUP_BLINK_RATE = 10
+BOSS_CHARGE_SPEED = 650
+BOSS_CHARGE_TIME = 0.7
+BOSS_FAN_SHOTS = 7
+BOSS_FAN_ANGLE = 70
+BOSS_RING_SHOTS = 16
+BOSS_FEATHER_SPEED = 260
+BOSS_FEATHER_DAMAGE = 16
+BOSS_FEATHER_RADIUS = 12
+BOSS_FEATHER_LIFETIME = 3.0
+BOSS_FEATHER_COLOR = (255, 200, 60)
+BOSS_SUMMONS = {
+    "normal":  [{"type": "small", "count": 5}],
+    "enraged": [{"type": "big", "count": 5}],
+}
+BOSS_SUMMON_DISTANCE = 90
 
 GEM_SIZE = (6 * PIXEL_SCALE, 6 * PIXEL_SCALE)
 BIG_GEM_SIZE = (6 * 4, 6 * 4)
@@ -132,10 +255,10 @@ STARTING_WEAPON = "syringe"
 WEAPON_STATS = {
     "syringe": {
         "display_name": "Syringe", "desc": "Throws syringes where you face",
-        "base": {"cooldown": 1.0, "damage": 10, "count": 1, "speed": 520, "pierce": 1, "lifetime": 0.9, "spread": 10},
+        "base": {"cooldown": 0.8, "damage": 10, "count": 1, "speed": 520, "pierce": 1, "lifetime": 1.2, "spread": 10},
         "upgrades": {
             2: {"count": 1, "desc": "+1 syringe"},
-            3: {"lifetime": 0.36, "desc": "+40% range"},
+            3: {"lifetime": 1, "desc": "+80% range"},
             4: {"count": 1, "desc": "+1 syringe"},
             5: {"pierce": 2, "damage": 5, "desc": "+2 pierce, +5 damage"},
         },
@@ -225,11 +348,3 @@ TEST_UPGRADES = [
 ]
 
 INTRO_TIME = 3.0
-HUD_XP_COLOR = (80, 150, 255)
-HUD_HP_COLOR = (220, 60, 60)
-HUD_BAR_BACK = (30, 30, 40)
-HUD_BOSS_COLOR = (200, 60, 200)
-CARD_COLOR = (35, 40, 55)
-CARD_HOVER_COLOR = (60, 70, 95)
-CARD_BORDER_COLOR = (230, 230, 230)
-OVERLAY_COLOR = (0, 0, 0, 160)

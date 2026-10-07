@@ -1,4 +1,6 @@
+import sys
+
 from game.game import Game
 
 if __name__ == "__main__":
-    Game().run()
+    Game(admin="--admin" in sys.argv).run()
