@@ -24,7 +24,8 @@ TERRAIN_FRAMES = {"grass": 8, "grass_details": 12, "water": 3, "trees": 3}
 PROP_SCALE = 2
 HOUSE_CANVAS = (64, 96)
 TREE_CANVAS = (32, 48)
-CITY_HOUSES = {"Leiden": "dutch", "Istanbul": "istanbul", "Wloclawek": "polish", "Avignon": "french"}
+CITY_HOUSES = {"Leiden": "dutch", "Tallinn": "estonian", "Istanbul": "istanbul", "Sparta": "greek",
+               "Wloclawek": "polish", "Dusseldorf": "german", "Avignon": "french"}
 HOUSE_SOLID_PART = 0.55
 TREE_TRUNK_WIDTH = 0.3
 TREE_TRUNK_HEIGHT = 0.3
