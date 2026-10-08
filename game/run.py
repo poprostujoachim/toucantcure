@@ -14,7 +14,7 @@ from game.ui import (card_rects, city_name, draw_end_banner, draw_hud, draw_intr
                      draw_player_hp_bar, draw_stat_sheet)
 from game.waves import WaveSpawner, disease_info, level_scaling, load_level
 from game.weapons import make_weapon
-from game.world import CityMap
+from game.generation import CityMap
 
 CARD_KEYS = [pygame.K_1, pygame.K_2, pygame.K_3]
 

@@ -2,6 +2,8 @@ import os
 
 import pygame
 
+from game.settings import CITY_HOUSES, HOUSE_CANVAS
+
 ASSETS_DIR = os.path.join(os.path.dirname(__file__), "assets")
 
 _frame_cache = {}
@@ -29,6 +31,29 @@ def load_frames(filename, frame_count, size, fallback_color="magenta"):
 
     _frame_cache[key] = frames
     return frames
+
+
+_house_cache = {}
+
+
+def load_city_house(city, height):
+    """A city's house for menus: the pixel-dutch-house sprite when the city has one, else the old square icon."""
+    key = (city, height)
+    if key not in _house_cache:
+        style = CITY_HOUSES.get(city)
+        if style is None:
+            image = load_frames(f"city_assets/{city}/house.png", 1, (height, height), fallback_color=(190, 150, 110))[0]
+        else:
+            width, canvas_height = HOUSE_CANVAS
+            image = load_frames(f"pixel-dutch-house/{style}_house.png", 1, HOUSE_CANVAS,
+                                fallback_color=(190, 150, 110))[0]
+            if height >= canvas_height:
+                scale = height // canvas_height
+                image = pygame.transform.scale(image, (width * scale, canvas_height * scale))
+            else:
+                image = pygame.transform.smoothscale(image, (round(width * height / canvas_height), height))
+        _house_cache[key] = image
+    return _house_cache[key]
 
 
 _recolor_cache = {}

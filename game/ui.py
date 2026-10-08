@@ -2,7 +2,7 @@ import os
 
 import pygame
 
-from game.assets import ASSETS_DIR, load_frames
+from game.assets import ASSETS_DIR, load_city_house, load_frames
 from game.settings import (CITY_DISPLAY_NAMES, CURE_CHANCE_MAX, CURE_CHANCE_MIN, DASH_COOLDOWN, FONT_FILE,
                            HEART_SIZE, MAX_WEAPON_LEVEL, OVERLAY_ALPHA, PANEL_ALPHA, PIXEL_FONT_SCALE, SCREEN_HEIGHT,
                            SCREEN_WIDTH, TEXT_COLOR, UI_COLORS)
@@ -244,7 +244,7 @@ def draw_effect(surface, center, text, up, good):
 def draw_intro(surface, run):
     dim_screen(surface)
     draw_panel(surface, centered_rect(760, 420))
-    house = load_frames(f"city_assets/{run.city}/house.png", 1, (120, 120), fallback_color=(190, 150, 110))[0]
+    house = load_city_house(run.city, 120)
     surface.blit(house, house.get_rect(midbottom=(SCREEN_WIDTH / 2, 280)))
     draw_text(surface, city_name(run.level.get("city", run.city)), (SCREEN_WIDTH / 2, 320), 72, center=True)
     draw_text(surface, run.disease["name"], (SCREEN_WIDTH / 2, 375), 40, UI_COLORS["accent"], center=True)

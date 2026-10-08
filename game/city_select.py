@@ -1,6 +1,6 @@
 import pygame
 
-from game.assets import load_frames
+from game.assets import load_city_house
 from game.menus import MenuScreen
 from game.settings import (CITY_DOT_RADIUS, CITY_MAP_NUDGE, CITY_ORDER, CITY_POSITIONS, CURE_CHANCE_MAX,
                            CURE_CHANCE_MIN, DEBUG, KEYS_LEFT, KEYS_RIGHT, MAP_MARGIN_DEGREES, MAP_RECT, UI_COLORS)
@@ -25,7 +25,7 @@ def map_positions():
 
 
 def load_house(city, size):
-    return load_frames(f"city_assets/{city}/house.png", 1, (size, size), fallback_color=(190, 150, 110))[0]
+    return load_city_house(city, size)
 
 
 def draw_lock(surface, center, color):
